@@ -2,6 +2,7 @@ package Meal;
 
 import Order.OrderEntity;
 import Restaurant.RestaurantEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -17,11 +18,18 @@ public class MealEntity {
 
     @ManyToOne
     @JoinColumn(name = "restaurant_id")
+    @JsonIgnore
     private RestaurantEntity restaurantEntity;
 
     @ManyToOne
     @JoinColumn(name = "order_id")
+    @JsonIgnore
     private OrderEntity orderEntity;
+
+//    @ManyToOne
+//    @JoinColumn(name = "menu")
+//    @JsonIgnore
+//    private RestaurantEntity menu;
 
     public MealEntity() {
     }
@@ -29,11 +37,14 @@ public class MealEntity {
     public MealEntity(String name, double price) {
         this.name = name;
         this.price = price;
+        this.orderEntity = new OrderEntity();
+        this.restaurantEntity = new RestaurantEntity();
     }
 
     public MealEntity(String name, double price, RestaurantEntity restaurantEntity) {
         this.name = name;
         this.price = price;
+        this.orderEntity = new OrderEntity();
         this.restaurantEntity = restaurantEntity;
     }
 
@@ -67,5 +78,13 @@ public class MealEntity {
 
     public void setRestaurantEntity(RestaurantEntity restaurantEntity) {
         this.restaurantEntity = restaurantEntity;
+    }
+
+    public OrderEntity getOrderEntity() {
+        return orderEntity;
+    }
+
+    public void setOrderEntity(OrderEntity orderEntity) {
+        this.orderEntity = orderEntity;
     }
 }

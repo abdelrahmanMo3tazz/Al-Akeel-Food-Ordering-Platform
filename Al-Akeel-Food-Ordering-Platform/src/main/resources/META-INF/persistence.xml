@@ -5,10 +5,8 @@
              version="3.0">
     <persistence-unit name="default">
         <class>User.UserEntity</class>
-        <class>Customer.Customer</class>
         <class>Meal.MealEntity</class>
         <class>Order.OrderEntity</class>
-        <class>Owner.Owner</class>
         <class>Restaurant.RestaurantEntity</class>
         <class>Runner.RunnerEntity</class>
 

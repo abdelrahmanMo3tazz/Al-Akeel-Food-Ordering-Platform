@@ -27,8 +27,10 @@ public class RestaurantEntity {
     private ArrayList<OrderEntity> orders;
 
     @OneToMany(mappedBy = "restaurantEntity", cascade = CascadeType.ALL)
-    @JsonIgnore
     private ArrayList<MealEntity> meals;
+
+    @Transient
+    private ArrayList<MealEntity> menu = new ArrayList<>();
 
 
     public RestaurantEntity() {
@@ -122,5 +124,17 @@ public class RestaurantEntity {
 
     public void removeMeal(MealEntity meal) {
         this.meals.remove(meal);
+    }
+
+    public ArrayList<MealEntity> getMenu() {
+        return menu;
+    }
+
+    public void setMenu(ArrayList<MealEntity> menu) {
+        this.menu = menu;
+    }
+
+    public void addMealToMenu(MealEntity meal) {
+        this.menu.add(meal);
     }
 }

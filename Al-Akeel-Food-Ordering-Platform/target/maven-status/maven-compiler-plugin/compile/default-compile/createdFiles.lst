@@ -1,0 +1,16 @@
+Customer\CustomerService.class
+Restaurant\RestaurantService.class
+App\App.class
+Order\OrderEntity.class
+User\UserEntity.class
+Meal\MealEntity.class
+Runner\RunnerEntity$Status.class
+Runner\RunnerEntity.class
+User\UserEntity$Role.class
+User\UserService.class
+Meal\MealService.class
+Order\OrderService.class
+Owner\OwnerService.class
+Restaurant\RestaurantEntity.class
+Order\OrderEntity$orderStatus.class
+Runner\RunnerService.class

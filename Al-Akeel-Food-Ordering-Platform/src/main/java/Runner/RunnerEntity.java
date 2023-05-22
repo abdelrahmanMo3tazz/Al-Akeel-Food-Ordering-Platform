@@ -4,13 +4,14 @@ import Order.OrderEntity;
 import User.UserEntity;
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 public class RunnerEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
     private String name;
@@ -19,24 +20,34 @@ public class RunnerEntity {
 
     private Status status;
 
-    private double fees;
+    private double deliveryFees;
 
     public enum Status {
         available,
         busy
     }
 
-    @OneToMany(mappedBy = "runner", cascade = CascadeType.ALL)
-    private List<OrderEntity> orderEntity;
+    @OneToOne
+    private OrderEntity orderEntity;
+
+    @Transient
+    private List<OrderEntity> completedOrders = new ArrayList<>();
 
     public RunnerEntity() {
     }
 
-    public RunnerEntity(String name, String password, Status status, double fees) {
+    public RunnerEntity(UserEntity userEntity) {
+        this.name = userEntity.getUsername();
+        this.password = userEntity.getPassword();
+        this.deliveryFees = userEntity.getFees();
+        this.status = Status.available;
+    }
+
+    public RunnerEntity(String name, String password, Status status, double deliveryFees) {
             this.name = name;
             this.password = password;
             this.status = status;
-            this.fees = fees;
+            this.deliveryFees = deliveryFees;
     }
 
     public long getId() {
@@ -71,19 +82,35 @@ public class RunnerEntity {
         this.status = status;
     }
 
-    public double getFees() {
-        return fees;
+    public double getDeliveryFees() {
+        return deliveryFees;
     }
 
-    public void setFees(double fees) {
-        this.fees = fees;
+    public void setDeliveryFees(double deliveryFees) {
+        this.deliveryFees = deliveryFees;
     }
 
-    public List<OrderEntity> getOrderEntity() {
+    public OrderEntity getOrderEntity() {
         return orderEntity;
     }
 
-    public void setOrderEntity(List<OrderEntity> orderEntity) {
+    public void setOrderEntity(OrderEntity orderEntity) {
         this.orderEntity = orderEntity;
+    }
+
+    public void setStatusBusy() {
+        this.status = Status.busy;;
+    }
+
+    public void setStatusAvailable() {
+        this.status = Status.available;
+    }
+
+    public List<OrderEntity> getCompletedOrders() {
+        return completedOrders;
+    }
+
+    public void setCompletedOrders(List<OrderEntity> completedOrders) {
+        this.completedOrders = completedOrders;
     }
 }
