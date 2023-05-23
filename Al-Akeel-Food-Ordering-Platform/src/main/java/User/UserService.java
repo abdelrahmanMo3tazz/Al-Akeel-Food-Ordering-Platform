@@ -2,24 +2,21 @@ package User;
 
 import Runner.RunnerEntity;
 import jakarta.ejb.Stateful;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.Query;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
 import java.util.List;
 
 @Path("/user")
-@Stateful
+@Stateless
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class UserService {
 
-    private final EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
-
-    private final EntityManager em = entityManagerFactory.createEntityManager();
+    @PersistenceContext
+    EntityManager em;
 
     //done
     //register user
@@ -27,7 +24,7 @@ public class UserService {
     @Path("register")
     public String register(UserEntity user){
         UserEntity userEntity = null;
-        RunnerEntity runnerEntity = null;
+        RunnerEntity runnerEntity = new RunnerEntity();
         try{
             String name = user.getUsername();
             String query = "SELECT u FROM UserEntity u WHERE u.username = \"" + name + "\"";
@@ -37,20 +34,26 @@ public class UserService {
 //            return e.getMessage();
         }
         if(userEntity == null){
-            em.getTransaction().begin();
+//            em.getTransaction().begin();
             if(user.getRole() != UserEntity.Role.runner){
                 user.setFees(0);
 //                em.persist(user);
             } else if (user.getRole() == UserEntity.Role.runner && user.getFees() == 0) {
                 user.setFees(10);
-                runnerEntity = new RunnerEntity(user);
+                runnerEntity.setName(user.getUsername());
+                runnerEntity.setDeliveryFees(10);
+                runnerEntity.setStatus(RunnerEntity.Status.available);
+                runnerEntity.setPassword(user.getPassword());
                 em.persist(runnerEntity);
             } else {
-                runnerEntity = new RunnerEntity(user);
+                runnerEntity.setName(user.getUsername());
+                runnerEntity.setDeliveryFees(user.getFees());
+                runnerEntity.setStatus(RunnerEntity.Status.available);
+                runnerEntity.setPassword(user.getPassword());
                 em.persist(runnerEntity);
             }
             em.persist(user);
-            em.getTransaction().commit();
+//            em.getTransaction().commit();
             return "User Registered Successfully";
         }
         else{

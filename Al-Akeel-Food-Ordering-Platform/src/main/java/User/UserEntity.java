@@ -1,14 +1,16 @@
 package User;
 
-import Order.OrderEntity;
+import Orders.OrderEntity;
 import Restaurant.RestaurantEntity;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class UserEntity {
+public class UserEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -26,40 +28,12 @@ public class UserEntity {
     }
 
     @OneToOne
+    @JsonIgnore
     private RestaurantEntity restaurantEntity;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", fetch = FetchType.EAGER)
+    @JsonIgnore
     private List<OrderEntity> orderEntity;
-
-    public UserEntity() {
-    }
-
-    public UserEntity(String username, String password, Role role, double fees) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.fees = fees;
-        this.restaurantEntity = new RestaurantEntity();
-        this.orderEntity = new ArrayList<>();
-    }
-
-
-    public UserEntity(String username, String password, Role role) {
-        this.username = username;
-        this.password = password;
-        this.role = role;
-        this.fees = 0;
-        this.restaurantEntity = new RestaurantEntity();
-        this.orderEntity = new ArrayList<>();
-    }
-
-    public RestaurantEntity getRestaurantEntity() {
-        return restaurantEntity;
-    }
-
-    public void setRestaurantEntity(RestaurantEntity restaurantEntity) {
-        this.restaurantEntity = restaurantEntity;
-    }
 
     public long getId() {
         return id;
@@ -99,6 +73,14 @@ public class UserEntity {
 
     public void setFees(double fees) {
         this.fees = fees;
+    }
+
+    public RestaurantEntity getRestaurantEntity() {
+        return restaurantEntity;
+    }
+
+    public void setRestaurantEntity(RestaurantEntity restaurantEntity) {
+        this.restaurantEntity = restaurantEntity;
     }
 
     public List<OrderEntity> getOrderEntity() {

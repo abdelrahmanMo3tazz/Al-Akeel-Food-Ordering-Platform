@@ -1,12 +1,16 @@
 package Meal;
 
-import Order.OrderEntity;
+import Orders.OrderEntity;
 import Restaurant.RestaurantEntity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
+
 @Entity
-public class MealEntity {
+//@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "restaurant_id"})})
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"name", "restaurant_id"})})
+public class MealEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,22 +35,6 @@ public class MealEntity {
 //    @JsonIgnore
 //    private RestaurantEntity menu;
 
-    public MealEntity() {
-    }
-
-    public MealEntity(String name, double price) {
-        this.name = name;
-        this.price = price;
-        this.orderEntity = new OrderEntity();
-        this.restaurantEntity = new RestaurantEntity();
-    }
-
-    public MealEntity(String name, double price, RestaurantEntity restaurantEntity) {
-        this.name = name;
-        this.price = price;
-        this.orderEntity = new OrderEntity();
-        this.restaurantEntity = restaurantEntity;
-    }
 
     public long getId() {
         return id;

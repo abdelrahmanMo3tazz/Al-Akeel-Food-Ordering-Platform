@@ -1,14 +1,15 @@
 package Runner;
 
-import Order.OrderEntity;
+import Orders.OrderEntity;
 import User.UserEntity;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class RunnerEntity {
+public class RunnerEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,22 +34,6 @@ public class RunnerEntity {
     @Transient
     private List<OrderEntity> completedOrders = new ArrayList<>();
 
-    public RunnerEntity() {
-    }
-
-    public RunnerEntity(UserEntity userEntity) {
-        this.name = userEntity.getUsername();
-        this.password = userEntity.getPassword();
-        this.deliveryFees = userEntity.getFees();
-        this.status = Status.available;
-    }
-
-    public RunnerEntity(String name, String password, Status status, double deliveryFees) {
-            this.name = name;
-            this.password = password;
-            this.status = status;
-            this.deliveryFees = deliveryFees;
-    }
 
     public long getId() {
         return id;
@@ -96,14 +81,6 @@ public class RunnerEntity {
 
     public void setOrderEntity(OrderEntity orderEntity) {
         this.orderEntity = orderEntity;
-    }
-
-    public void setStatusBusy() {
-        this.status = Status.busy;;
-    }
-
-    public void setStatusAvailable() {
-        this.status = Status.available;
     }
 
     public List<OrderEntity> getCompletedOrders() {

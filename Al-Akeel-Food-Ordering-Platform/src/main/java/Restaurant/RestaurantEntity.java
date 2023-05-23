@@ -1,78 +1,34 @@
 package Restaurant;
 
 import Meal.MealEntity;
-import Order.OrderEntity;
+import Orders.OrderEntity;
 import User.UserEntity;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class RestaurantEntity {
+public class RestaurantEntity implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
+    @Column(unique = true)
     private String name;
 
     private double earns;
 
-    @OneToOne(mappedBy = "restaurantEntity", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "restaurantEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
     private UserEntity owner;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL)
-    private ArrayList<OrderEntity> orders;
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<OrderEntity> orders;
 
-    @OneToMany(mappedBy = "restaurantEntity", cascade = CascadeType.ALL)
-    private ArrayList<MealEntity> meals;
+    @OneToMany(mappedBy = "restaurantEntity", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private List<MealEntity> meals;
 
-    @Transient
-    private ArrayList<MealEntity> menu = new ArrayList<>();
-
-
-    public RestaurantEntity() {
-    }
-
-    public RestaurantEntity(String name) {
-        this.name = name;
-        this.meals = new ArrayList<>();
-        this.orders = new ArrayList<>();
-    }
-
-    public RestaurantEntity(String name, UserEntity owner) {
-        this.name = name;
-        this.owner = owner;
-        this.earns = 0;
-        this.meals = new ArrayList<>();
-        this.orders = new ArrayList<>();
-    }
-
-    public RestaurantEntity(String name, UserEntity owner, ArrayList<MealEntity> meals) {
-        this.name = name;
-        this.owner = owner;
-        this.meals = meals;
-        this.earns = 0;
-        this.orders = new ArrayList<>();
-    }
-
-    public RestaurantEntity(String name, UserEntity owner, ArrayList<MealEntity> meals, ArrayList<OrderEntity> orders) {
-        this.name = name;
-        this.owner = owner;
-        this.earns = 0;
-        this.meals = meals;
-        this.orders = orders;
-    }
-
-    public UserEntity getOwner() {
-        return owner;
-    }
-
-    public void setOwner(UserEntity owner) {
-        this.owner = owner;
-    }
 
     public long getId() {
         return id;
@@ -86,6 +42,11 @@ public class RestaurantEntity {
         return name;
     }
 
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public double getEarns() {
         return earns;
     }
@@ -94,47 +55,28 @@ public class RestaurantEntity {
         this.earns = earns;
     }
 
-    public void addEarns(double earns) {
-        this.earns += earns;
+    public UserEntity getOwner() {
+        return owner;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setOwner(UserEntity owner) {
+        this.owner = owner;
     }
 
-    public ArrayList<OrderEntity> getOrders() {
+    public List<OrderEntity> getOrders() {
         return orders;
     }
 
-    public void setOrders(ArrayList<OrderEntity> orders) {
+    public void setOrders(List<OrderEntity> orders) {
         this.orders = orders;
     }
 
-    public ArrayList<MealEntity> getMeals() {
+    public List<MealEntity> getMeals() {
         return meals;
     }
 
-    public void setMeals(ArrayList<MealEntity> meals) {
+    public void setMeals(List<MealEntity> meals) {
         this.meals = meals;
     }
 
-    public void addMeal(MealEntity meal) {
-        this.meals.add(meal);
-    }
-
-    public void removeMeal(MealEntity meal) {
-        this.meals.remove(meal);
-    }
-
-    public ArrayList<MealEntity> getMenu() {
-        return menu;
-    }
-
-    public void setMenu(ArrayList<MealEntity> menu) {
-        this.menu = menu;
-    }
-
-    public void addMealToMenu(MealEntity meal) {
-        this.menu.add(meal);
-    }
 }

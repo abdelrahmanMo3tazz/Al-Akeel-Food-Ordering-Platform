@@ -1,9 +1,9 @@
 package Runner;
 
-import Order.OrderEntity;
-import Order.OrderService;
-import Restaurant.RestaurantEntity;
+import Orders.OrderEntity;
+import Orders.OrderService;
 import jakarta.ejb.Stateful;
+import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 @Path("/runner")
-@Stateful
+@Stateless
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class RunnerService {
@@ -44,7 +44,7 @@ public class RunnerService {
     //get runner by id
     @GET
     @Path("getRunner/{runnerId}")
-    public RunnerEntity getRunner(@PathParam("runnerId") int runnerId) {
+    public RunnerEntity getRunner(@PathParam("runnerId") long runnerId) {
         RunnerEntity runnerEntity = null;
         try {
             runnerEntity = em.find(RunnerEntity.class, runnerId);
@@ -74,7 +74,7 @@ public class RunnerService {
     //deliever order
     @PUT
     @Path("deliverOrder/{runnerId}")
-    public String deliverOrder(@PathParam("runnerId") int runnerId) {
+    public String deliverOrder(@PathParam("runnerId") long runnerId) {
         OrderService orderService = new OrderService();
         return orderService.deliverOrder(runnerId);
     }
@@ -82,7 +82,7 @@ public class RunnerService {
     //list Completed Orders
     @GET
     @Path("listCompletedOrders/{runnerId}")
-    public List<OrderEntity> listCompletedOrders(@PathParam("runnerId") int runnerId) {
+    public List<OrderEntity> listCompletedOrders(@PathParam("runnerId") long runnerId) {
         return getRunner(runnerId).getCompletedOrders();
     }
 

@@ -2,146 +2,119 @@ package Restaurant;
 
 import Meal.MealEntity;
 import Meal.MealService;
-import Order.OrderEntity;
-import Order.OrderService;
+import Orders.OrderEntity;
 import User.UserEntity;
 import jakarta.ejb.Stateful;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.Persistence;
-import jakarta.persistence.Query;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ejb.Stateless;
+import jakarta.persistence.*;
+import jakarta.transaction.Transactional;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Path("/restaurant")
-@Stateful
+@Stateless
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class RestaurantService {
 
-    private final EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("default");
+    @PersistenceContext
+    private EntityManager em;
 
-    private final EntityManager em = entityManagerFactory.createEntityManager();
 
 
     @POST
     @Path("createRestaurant/{ownerId}")
-    public String createRestaurant(RestaurantEntity restaurant,@PathParam("ownerId") int ownerId) {
+    public String createRestaurant(RestaurantEntity restaurant,@PathParam("ownerId") long ownerId) {
         RestaurantEntity restaurantEntity = null;
         UserEntity owner = em.find(UserEntity.class, ownerId);
+        if(owner.getRestaurantEntity() != null){
+            return "You already have a restaurant";
+        }
+        restaurant.setEarns(0.0);
+        restaurant.setOwner(owner);
+        owner.setRestaurantEntity(restaurant);
+        em.merge(owner);
         try {
-            String query = "SELECT u FROM RestaurantEntity u WHERE u.owner = \"" + owner + "\"";
-            Query query1 = em.createQuery(query);
-            restaurantEntity = (RestaurantEntity) query1.getSingleResult();
-        } catch (Exception e) {
-        }
-        if (restaurantEntity == null) {
-            em.getTransaction().begin();
-            restaurant.setOwner(owner);
             em.persist(restaurant);
-            em.getTransaction().commit();
-            return "Restaurant Created Successfully";
-        } else {
-            return "You already Have A Restaurant";
+        } catch (Exception e) {
+            return "Restaurant already exists";
         }
+        return "Restaurant Created Successfully";
+//        UserEntity owner = em.find(UserEntity.class, ownerId);
+//        restaurant.setOwner(owner);
+//        owner.setRestaurantEntity(restaurant);
+//        em.merge(owner);
+//        em.persist(restaurant);
+//        return "Restaurant Created Successfully";
     }
 
-    //add meal
+//    add meal
     @POST
     @Path("createMeal/{restaurantId}")
-    public String createMeal(MealEntity mealEntity, @PathParam("restaurantId") int restaurantId){
+    public String createMeal(MealEntity mealEntity, @PathParam("restaurantId") long restaurantId){
         MealService mealService = new MealService();
         return mealService.createMeal(mealEntity, restaurantId);
     }
 
-    //add meal to restaurant menu
-    @POST
-    @Path("createRestaurantMenu/{restaurantId}")
-    public String createRestaurantMenu(List<Integer> mealIds, @PathParam("restaurantId") int restaurantId){
-        RestaurantEntity restaurantEntity = em.find(RestaurantEntity.class, restaurantId);
-        StringBuilder result = new StringBuilder();
-        for (int mealId : mealIds) {
-            try{
-                MealEntity mealEntity = em.find(MealEntity.class, mealId);
-                if(mealEntity.getRestaurantEntity().getId() != restaurantId){
-                    result.append(mealEntity.getName()).append(" does not exist\n");
-                }else if (mealEntity.getRestaurantEntity().getId() == restaurantId && restaurantEntity.getMenu().contains(mealEntity)){
-                    result.append(mealEntity.getName()).append(" already exists\n");
-                }else{
-                    restaurantEntity.addMealToMenu(mealEntity);
-                    result.append(mealEntity.getName()).append(" added successfully\n");
-                }
-            }catch (Exception e){
-                result.append("fault at the loop does not exist\n");
-            }
-        }
-        return result.toString();
-    }
 
     //get menu
     @GET
     @Path("getMenu/{restaurantId}")
-    public List<MealEntity> getMenu(@PathParam("restaurantId") int restaurantId){
-        try{
-            RestaurantEntity restaurantEntity = em.find(RestaurantEntity.class, restaurantId);
-            return restaurantEntity.getMenu();
-        }catch (Exception e){
-            return null;
+    public List<MealEntity> getMenu(@PathParam("restaurantId") long restaurantId){
+        List<MealEntity> mealEntities = null;
+//        RestaurantEntity restaurantEntity = em.find(RestaurantEntity.class, restaurantId);
+        try {
+            String query = "SELECT u FROM MealEntity u WHERE u.restaurantEntity.id = \"" + restaurantId + "\"";
+            Query query1 = em.createQuery(query);
+            mealEntities = query1.getResultList();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
+        return mealEntities;
     }
 
     //remove meal from restaurant
     @DELETE
     @Path("removeMeal/{restaurantId}/{mealId}")
     public String removeMeal(@PathParam("mealId") int mealId, @PathParam("restaurantId") int restaurantId){
-        RestaurantEntity restaurantEntity = em.find(RestaurantEntity.class, restaurantId);
-        MealEntity mealEntity = em.find(MealEntity.class, mealId);
+        MealEntity mealEntity = null;
+        RestaurantEntity restaurantEntity = null;
         try{
-            if(mealEntity.getRestaurantEntity().getId() != restaurantId){
-                return mealEntity.getName() + " does not exist";
-            }else if (mealEntity.getRestaurantEntity().getId() == restaurantId && !restaurantEntity.getMeals().contains(mealEntity)){
-                return mealEntity.getName() + " does not exist";
-            }else{
-                restaurantEntity.removeMeal(mealEntity);
-                em.remove(mealEntity);
-                return mealEntity.getName() + " removed successfully";
-            }
+            mealEntity = em.find(MealEntity.class, mealId);
+            restaurantEntity = em.find(RestaurantEntity.class, restaurantId);
         }catch (Exception e){
-            return "fault at the loop";
+            return "Meal or Restaurant does not exist";
         }
-    }
-
-    //list restaurant meals
-    @GET
-    @Path("listMeals/{restaurantId}")
-    public List<MealEntity> getMeals(@PathParam("restaurantId") int restaurantId){
-        MealService mealService = new MealService();
-        return mealService.getRestaurantMeals(restaurantId);
+        if(mealEntity.getRestaurantEntity().equals(restaurantEntity)){
+            restaurantEntity.getMeals().remove(mealEntity);
+//            em.getTransaction().begin();
+            em.remove(mealEntity);
+//            em.getTransaction().commit();
+            return "Meal removed successfully";
+        }else{
+            return "Meal does not belong to this restaurant";
+        }
     }
 
     //get restaurant by id
     @GET
     @Path("getRestaurantById/{id}")
-    public RestaurantEntity getRestaurantById(@PathParam("id") int id){
+    public RestaurantEntity getRestaurantById(@PathParam("id") long id){
         return em.find(RestaurantEntity.class, id);
     }
 
     //update meal price
     @PUT
     @Path("updateMealPrice/{restaurantId}/{mealId}/{newPrice}")
-    public String updateMealPrice(@PathParam("restaurantId") int restaurantId, @PathParam("mealId") int mealId, @PathParam("newPrice") double newPrice){
+    public String updateMealPrice(@PathParam("restaurantId") long restaurantId, @PathParam("mealId") long mealId, @PathParam("newPrice") double newPrice){
         MealService mealService = new MealService();
         try {
-            mealService.getMeal(mealId, restaurantId);
-            MealEntity mealEntity = mealService.getMeal(mealId, restaurantId);
+            MealEntity mealEntity = em.find(MealEntity.class, mealId);
             mealEntity.setPrice(newPrice);
-            em.getTransaction().begin();
             em.merge(mealEntity);
-            em.getTransaction().commit();
             return mealEntity.getName() + " Price Updated Successfully";
         }catch (Exception e){
             return "Meal does not exist";
@@ -164,8 +137,8 @@ public class RestaurantService {
     //get all completed orders
     @GET
     @Path("getCompletedOrders/{restaurantId}")
-    public List<OrderEntity> getAllRestaurantCompetedOrders(@PathParam("restaurantId") int restaurantId){
-        String query = "SELECT u FROM OrderEntity u WHERE u.restaurantEntity.id = " + restaurantId + " AND u.status = \"Completed\"";
+    public List<OrderEntity> getAllRestaurantCompetedOrders(@PathParam("restaurantId") long restaurantId){
+        String query = "SELECT u FROM OrderEntity u WHERE u.restaurant.id = " + restaurantId + " AND u.status = \"Completed\"";
         Query query1 = em.createQuery(query);
         return query1.getResultList();
     }
@@ -173,8 +146,8 @@ public class RestaurantService {
     //get all cancelled orders
     @GET
     @Path("getCancelledOrders/{restaurantId}")
-    public List<OrderEntity> getAllRestaurantCancelledOrders(@PathParam("restaurantId") int restaurantId){
-        String query = "SELECT u FROM OrderEntity u WHERE u.restaurantEntity.id = " + restaurantId + " AND u.status = \"Cancelled\"";
+    public List<OrderEntity> getAllRestaurantCancelledOrders(@PathParam("restaurantId") long restaurantId){
+        String query = "SELECT u FROM OrderEntity u WHERE u.restaurant.id = " + restaurantId + " AND u.status = \"Cancelled\"";
         Query query1 = em.createQuery(query);
         return query1.getResultList();
     }
@@ -182,7 +155,7 @@ public class RestaurantService {
     //create restaurant report
     @GET
     @Path("createRestaurantReport/{restaurantId}")
-    public String createReport(@PathParam("restaurantId") int restaurantId){
+    public String createReport(@PathParam("restaurantId") long restaurantId){
         double totalEarned = 0;
         List<OrderEntity> completedOrders = getAllRestaurantCompetedOrders(restaurantId);
         List<OrderEntity> cancelledOrders = getAllRestaurantCancelledOrders(restaurantId);
